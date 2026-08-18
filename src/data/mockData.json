@@ -1,0 +1,274 @@
+{
+  "system": {
+    "name": "CHANAKYA-CRYPTO",
+    "agency": "Chandigarh Police Cyber Crime Cell",
+    "status": "OPERATIONAL",
+    "environment": "DEMO / MOCK INTELLIGENCE DATA"
+  },
+  "cases": [
+    {
+      "id": "CC-2026-0417",
+      "firNumber": "FIR-2026-0417",
+      "title": "Investment Fraud Network",
+      "status": "ACTIVE",
+      "priority": "CRITICAL",
+      "investigator": "INV-CHD-042",
+      "createdAt": "2026-08-16T09:30:00Z",
+      "estimatedIllicitFundsINR": 4820000,
+      "primaryWallet": "W001"
+    },
+    {
+      "id": "CC-2026-0398",
+      "firNumber": "FIR-2026-0398",
+      "title": "Crypto Payment Scam",
+      "status": "ACTIVE",
+      "priority": "HIGH",
+      "investigator": "INV-CHD-019",
+      "createdAt": "2026-08-14T12:15:00Z",
+      "estimatedIllicitFundsINR": 1730000,
+      "primaryWallet": "W007"
+    },
+    {
+      "id": "CC-2026-0371",
+      "firNumber": "FIR-2026-0371",
+      "title": "Online Job Scam Network",
+      "status": "REVIEW",
+      "priority": "HIGH",
+      "investigator": "INV-CHD-031",
+      "createdAt": "2026-08-11T14:05:00Z",
+      "estimatedIllicitFundsINR": 960000,
+      "primaryWallet": "W008"
+    }
+  ],
+  "wallets": [
+    {
+      "id": "W001",
+      "address": "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
+      "label": "Primary Suspect",
+      "type": "SUSPECT",
+      "riskScore": 94,
+      "balance": "12.84 ETH",
+      "balanceINR": 3180000,
+      "kycStatus": "UNKNOWN",
+      "status": "FLAGGED",
+      "tags": [
+        "SUSPECT",
+        "FRAUD",
+        "HIGH VALUE"
+      ]
+    },
+    {
+      "id": "W002",
+      "address": "0x3F786850E387550F45A7dF8E2dB9F4A3D5C9A221",
+      "label": "Mule Account 01",
+      "type": "MULE",
+      "riskScore": 81,
+      "balance": "4.72 ETH",
+      "balanceINR": 1160000,
+      "kycStatus": "UNKNOWN",
+      "status": "SUSPICIOUS",
+      "tags": [
+        "MULE",
+        "RAPID TRANSFER",
+        "NEW ACCOUNT"
+      ]
+    },
+    {
+      "id": "W003",
+      "address": "0x9D8f4C2F5E6A781234567890abcdef1234567890",
+      "label": "Obfuscation Service",
+      "type": "MIXER",
+      "riskScore": 99,
+      "balance": "\u2014",
+      "balanceINR": 0,
+      "kycStatus": "N/A",
+      "status": "FLAGGED",
+      "tags": [
+        "MIXER",
+        "OBFUSCATION",
+        "HIGH RISK"
+      ]
+    },
+    {
+      "id": "W004",
+      "address": "0xA7C4D2E81F5A6B7C8D9E00112233445566778899",
+      "label": "Mule Account 02",
+      "type": "MULE",
+      "riskScore": 76,
+      "balance": "2.13 ETH",
+      "balanceINR": 520000,
+      "kycStatus": "UNKNOWN",
+      "status": "SUSPICIOUS",
+      "tags": [
+        "MULE",
+        "STRUCTURING"
+      ]
+    },
+    {
+      "id": "W005",
+      "address": "0xB1C2D3E4F5061728394051627384950617283940",
+      "label": "Exchange Off-Ramp",
+      "type": "EXCHANGE",
+      "riskScore": 32,
+      "balance": "\u2014",
+      "balanceINR": 0,
+      "kycStatus": "VERIFIED",
+      "status": "IDENTIFIED",
+      "tags": [
+        "CENTRALIZED EXCHANGE",
+        "OFF-RAMP"
+      ],
+      "entity": "Binance"
+    },
+    {
+      "id": "W006",
+      "address": "0xC4D5E6F708192837465564738291001928374650",
+      "label": "Mule Account 03",
+      "type": "MULE",
+      "riskScore": 88,
+      "balance": "6.42 USDT",
+      "balanceINR": 540000,
+      "kycStatus": "UNKNOWN",
+      "status": "FLAGGED",
+      "tags": [
+        "MULE",
+        "USDT",
+        "HIGH RISK"
+      ]
+    },
+    {
+      "id": "W007",
+      "address": "0x8B72EAA4B70B7A1F8C2D3E4F5061728394051627",
+      "label": "Payment Scam Source",
+      "type": "SUSPECT",
+      "riskScore": 89,
+      "balance": "5.18 ETH",
+      "balanceINR": 1280000,
+      "kycStatus": "UNKNOWN",
+      "status": "FLAGGED",
+      "tags": [
+        "SCAM",
+        "HIGH VALUE"
+      ]
+    },
+    {
+      "id": "W008",
+      "address": "0xD8E7F601928374650A1B2C3D4E5F607182930405",
+      "label": "Job Scam Source",
+      "type": "SUSPECT",
+      "riskScore": 84,
+      "balance": "3.09 ETH",
+      "balanceINR": 760000,
+      "kycStatus": "UNKNOWN",
+      "status": "FLAGGED",
+      "tags": [
+        "SCAM",
+        "RECRUITMENT FRAUD"
+      ]
+    }
+  ],
+  "transactions": [
+    {
+      "id": "TX001",
+      "from": "W001",
+      "to": "W002",
+      "asset": "ETH",
+      "amount": "4.80 ETH",
+      "amountINR": 1180000,
+      "timestamp": "2026-08-16T10:31:22Z",
+      "risk": "HIGH"
+    },
+    {
+      "id": "TX002",
+      "from": "W002",
+      "to": "W003",
+      "asset": "ETH",
+      "amount": "4.65 ETH",
+      "amountINR": 1140000,
+      "timestamp": "2026-08-16T10:48:10Z",
+      "risk": "CRITICAL"
+    },
+    {
+      "id": "TX003",
+      "from": "W003",
+      "to": "W004",
+      "asset": "ETH",
+      "amount": "3.90 ETH",
+      "amountINR": 960000,
+      "timestamp": "2026-08-16T11:14:42Z",
+      "risk": "HIGH"
+    },
+    {
+      "id": "TX004",
+      "from": "W004",
+      "to": "W006",
+      "asset": "USDT",
+      "amount": "630,000 USDT",
+      "amountINR": 630000,
+      "timestamp": "2026-08-16T11:32:15Z",
+      "risk": "HIGH"
+    },
+    {
+      "id": "TX005",
+      "from": "W006",
+      "to": "W005",
+      "asset": "USDT",
+      "amount": "500,000 USDT",
+      "amountINR": 500000,
+      "timestamp": "2026-08-16T12:02:08Z",
+      "risk": "MEDIUM"
+    },
+    {
+      "id": "TX006",
+      "from": "W007",
+      "to": "W002",
+      "asset": "ETH",
+      "amount": "2.10 ETH",
+      "amountINR": 520000,
+      "timestamp": "2026-08-15T15:08:11Z",
+      "risk": "HIGH"
+    },
+    {
+      "id": "TX007",
+      "from": "W008",
+      "to": "W004",
+      "asset": "ETH",
+      "amount": "1.75 ETH",
+      "amountINR": 430000,
+      "timestamp": "2026-08-12T17:22:40Z",
+      "risk": "HIGH"
+    }
+  ],
+  "alerts": [
+    {
+      "id": "AL001",
+      "severity": "CRITICAL",
+      "title": "High-value transfer detected",
+      "wallet": "W001",
+      "amountINR": 1180000,
+      "timestamp": "2026-08-16T10:31:22Z"
+    },
+    {
+      "id": "AL002",
+      "severity": "CRITICAL",
+      "title": "Obfuscation service interaction",
+      "wallet": "W003",
+      "timestamp": "2026-08-16T10:48:10Z"
+    },
+    {
+      "id": "AL003",
+      "severity": "HIGH",
+      "title": "Rapid multi-hop movement",
+      "wallet": "W004",
+      "timestamp": "2026-08-16T11:14:42Z"
+    },
+    {
+      "id": "AL004",
+      "severity": "HIGH",
+      "title": "Known exchange off-ramp identified",
+      "wallet": "W005",
+      "amountINR": 500000,
+      "timestamp": "2026-08-16T12:02:08Z"
+    }
+  ]
+}
