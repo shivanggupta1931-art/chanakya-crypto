@@ -6,6 +6,7 @@ import PlaceholderPage from "./pages/PlaceholderPage";
 import CaseVaultPage from "./pages/CaseVaultPage";
 import ScamMixerIntelPage from "./pages/ScamMixerIntelPage";
 import ReportStudio from "./components/reports/ReportStudio";
+// import CaseVaultPage from "./pages/CaseVaultPage";
 
 type Theme = "light" | "dark" | "amoled";
 
