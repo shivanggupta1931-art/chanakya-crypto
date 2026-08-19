@@ -10,7 +10,8 @@ export default function ReportStudio() {
   const [generating, setGenerating] = useState(false);
   const [done, setDone] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
-
+  const walletAddress =
+  "0x00000000219ab540356cbb839cbe05303d7705fa";
   async function generate() {
     if (!reportRef.current) return;
     setGenerating(true);
@@ -63,7 +64,12 @@ export default function ReportStudio() {
               <div><span>INVESTIGATOR</span><b>{caseData.investigator}</b></div>
               <div><span>EST. ILLICIT FUNDS</span><b>₹{caseData.estimatedIllicitFundsINR.toLocaleString("en-IN")}</b></div>
             </div>
-            <div className="report-graph"><WalletGraph onWalletSelect={() => {}} /></div>
+           <div className="report-graph">
+  <WalletGraph
+    walletAddress={walletAddress}
+    onWalletSelect={() => {}}
+  />
+</div>
             <div className="report-footer">DEMO EVIDENCE PREVIEW · Generated {new Date().toLocaleDateString("en-IN")}</div>
           </div>
         </section>

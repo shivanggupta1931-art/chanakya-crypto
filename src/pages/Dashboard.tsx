@@ -5,7 +5,13 @@ import WalletGraph from "../components/graph/WalletGraph";
 import WalletDrawer from "../components/wallet/WalletDrawer";
 import { api, type Wallet } from "../lib/api";
 
-export default function Dashboard({ setPage }: { setPage: (p: string) => void }) {
+export default function Dashboard({
+  setPage,
+  walletAddress,
+}: {
+  setPage: (p: string) => void;
+  walletAddress: string;
+}) {
   const caseData = api.getCase("CC-2026-0417")!;
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [explain, setExplain] = useState(false);
@@ -51,7 +57,10 @@ export default function Dashboard({ setPage }: { setPage: (p: string) => void })
             <span><i className="red-dot"/> Flagged / illicit</span>
             <span><i className="green-dot"/> Exchange / off-ramp</span>
           </div>
-          <div className="graph-wrap"><WalletGraph onWalletSelect={setWallet}/></div>
+          <div className="graph-wrap"><WalletGraph
+  walletAddress="0x00000000219ab540356cbb839cbe05303d7705fa"
+  onWalletSelect={setWallet}
+/></div>
         </section>
 
         <aside className="intel-column">
