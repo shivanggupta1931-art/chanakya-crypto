@@ -3,46 +3,31 @@ import Sidebar from "./components/layout/Sidebar";
 import TopBar from "./components/layout/TopBar";
 import Dashboard from "./pages/Dashboard";
 import PlaceholderPage from "./pages/PlaceholderPage";
+import CaseVaultPage from "./pages/CaseVaultPage";
 import ReportStudio from "./components/reports/ReportStudio";
 
 type Theme = "light" | "dark" | "amoled";
 
-// Default wallet used when the app starts.
-// The user can replace this from Wallet Tracer.
-const DEFAULT_WALLET =
-  " ";
+const DEFAULT_WALLET = "";
 
 export default function App() {
-  const [theme, setTheme] =
-    useState<Theme>(
-      () =>
-        (localStorage.getItem(
-          "chanakya-theme"
-        ) as Theme) || "dark"
-    );
+  const [theme, setTheme] = useState<Theme>(
+    () =>
+      (localStorage.getItem("chanakya-theme") as Theme) || "dark"
+  );
 
-  /*
-   * Current wallet being investigated.
-   */
   const [currentWalletAddress, setCurrentWalletAddress] =
     useState(DEFAULT_WALLET);
 
-  const [page, setPage] =
-    useState("Dashboard");
+  const [page, setPage] = useState("Dashboard");
 
   useEffect(() => {
-    localStorage.setItem(
-      "chanakya-theme",
-      theme
-    );
-
-    document.documentElement.dataset.theme =
-      theme;
+    localStorage.setItem("chanakya-theme", theme);
+    document.documentElement.dataset.theme = theme;
   }, [theme]);
 
   return (
     <div className={`app theme-${theme}`}>
-
       <Sidebar
         theme={theme}
         setTheme={setTheme}
@@ -51,7 +36,6 @@ export default function App() {
       />
 
       <main className="main-stage">
-
         <TopBar />
 
         {page === "Dashboard" ? (
@@ -59,20 +43,20 @@ export default function App() {
             setPage={setPage}
             walletAddress={currentWalletAddress}
           />
-        ) : page === "Report Studio" ? (
-          <ReportStudio
-            
+        ) : page === "Case / FIR Vault" ? (
+          <CaseVaultPage
+            setPage={setPage}
+            onWalletAddressChange={setCurrentWalletAddress}
           />
+        ) : page === "Report Studio" ? (
+          <ReportStudio />
         ) : (
           <PlaceholderPage
             title={page}
             walletAddress={currentWalletAddress}
-            onWalletAddressChange={
-              setCurrentWalletAddress
-            }
+            onWalletAddressChange={setCurrentWalletAddress}
           />
         )}
-
       </main>
     </div>
   );
