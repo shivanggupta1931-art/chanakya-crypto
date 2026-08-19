@@ -39,6 +39,17 @@ function formatAddress(address: string) {
  */
 const API_BASE_URL = "https://chanakya-crypto.onrender.com";
 
+const NETWORKS = [
+  { id: "ethereum-mainnet", name: "Ethereum (ETH)" },
+  { id: "bitcoin", name: "Bitcoin (BTC)" },
+  { id: "bsc", name: "BNB Smart Chain (BSC)" },
+  { id: "polygon", name: "Polygon (MATIC)" },
+  { id: "avalanche", name: "Avalanche (AVAX)" },
+  { id: "arbitrum", name: "Arbitrum (ARB)" },
+  { id: "optimism", name: "Optimism (OP)" },
+  { id: "solana", name: "Solana (SOL)" },
+];
+
 function formatValue(tx: Transaction) {
   if (tx.value === null || tx.value === undefined) {
     return "-";
@@ -85,6 +96,9 @@ export default function PlaceholderPage({
   const [network, setNetwork] =
     useState("ethereum-mainnet");
 
+  const [selectedNetwork, setSelectedNetwork] =
+    useState("ethereum-mainnet");
+
   const [loading, setLoading] =
     useState(false);
 
@@ -101,6 +115,22 @@ export default function PlaceholderPage({
 
   async function analyzeWallet() {
     const address = inputAddress.trim();
+
+    if (selectedNetwork !== "ethereum-mainnet") {
+      const selected = NETWORKS.find(
+        (item) => item.id === selectedNetwork
+      );
+
+      setError(
+        `${selected?.name || "This network"} is not connected yet. Ethereum Mainnet is currently supported.`
+      );
+
+      setAnalyzedAddress("");
+      setTransactions([]);
+      setTransactionCount(0);
+
+      return;
+    }
 
     if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
       setError(
@@ -238,7 +268,9 @@ export default function PlaceholderPage({
               </span>
 
               <h2>
-                Analyze Ethereum Wallet
+                Analyze {NETWORKS.find(
+                  (item) => item.id === selectedNetwork
+                )?.name || "Ethereum (ETH)"} Wallet
               </h2>
             </div>
 
@@ -253,6 +285,37 @@ export default function PlaceholderPage({
               flexWrap: "wrap",
             }}
           >
+            <div style={{ minWidth: "220px" }}>
+              <select
+                value={selectedNetwork}
+                onChange={(e) => {
+                  setSelectedNetwork(e.target.value);
+                  setError("");
+                  setAnalyzedAddress("");
+                  setTransactions([]);
+                  setTransactionCount(0);
+                }}
+                style={{
+                  width: "100%",
+                  height: "42px",
+                  padding: "0 12px",
+                  borderRadius: "8px",
+                  border: "1px solid var(--border)",
+                  background: "var(--panel)",
+                  color: "var(--text)",
+                  fontSize: "13px",
+                  outline: "none",
+                  cursor: "pointer",
+                }}
+              >
+                {NETWORKS.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div
               className="search-input"
               style={{
