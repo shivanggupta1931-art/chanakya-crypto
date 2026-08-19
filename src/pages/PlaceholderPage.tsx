@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Search,
   Activity,
@@ -35,14 +35,10 @@ function formatAddress(address: string) {
 }
 
 /*
- * Backend URL:
- * - Local development: http://localhost:5001
- * - Production: set VITE_API_BASE_URL to your deployed backend URL.
- *
- * Example:
- * VITE_API_BASE_URL=https://your-backend-domain.com
+ * Backend URL
  */
 const API_BASE_URL = "http://localhost:5001";
+
 function formatValue(tx: Transaction) {
   if (tx.value === null || tx.value === undefined) {
     return "-";
@@ -60,42 +56,61 @@ export default function PlaceholderPage({
 }: {
   title: string;
   walletAddress: string;
-  onWalletAddressChange: (
-    address: string
-  ) => void;
+  onWalletAddressChange: (address: string) => void;
 }) {
   const isTracer =
     title.trim().toLowerCase() === "wallet tracer";
 
-
+  /*
+   * inputAddress is what the user is currently typing.
+   *
+   * IMPORTANT:
+   * This is intentionally separate from walletAddress.
+   *
+   * walletAddress = currently investigated wallet
+   * inputAddress  = wallet currently being typed
+   */
+  const [inputAddress, setInputAddress] =
+    useState(walletAddress);
 
   const [analyzedAddress, setAnalyzedAddress] =
     useState("");
 
-  const [transactions, setTransactions] = useState<
-    Transaction[]
-  >([]);
+  const [transactions, setTransactions] =
+    useState<Transaction[]>([]);
 
   const [transactionCount, setTransactionCount] =
     useState(0);
 
-  const [network, setNetwork] = useState(
-    "ethereum-mainnet"
-  );
+  const [network, setNetwork] =
+    useState("ethereum-mainnet");
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] =
+    useState(false);
 
-  const [error, setError] = useState("");
+  const [error, setError] =
+    useState("");
+
+  /*
+   * If the current wallet changes somewhere else
+   * in the application, keep the input synchronized.
+   */
+  useEffect(() => {
+    setInputAddress(walletAddress);
+  }, [walletAddress]);
 
   async function analyzeWallet() {
-    const address = walletAddress.trim();
+    const address = inputAddress.trim();
 
     if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
       setError(
         "Please enter a valid Ethereum wallet address."
       );
+
       setAnalyzedAddress("");
       setTransactions([]);
+      setTransactionCount(0);
+
       return;
     }
 
@@ -135,17 +150,25 @@ export default function PlaceholderPage({
         );
       }
 
-      const walletData = data as WalletResponse;
+      const walletData =
+        data as WalletResponse;
 
+      /*
+       * Analysis succeeded.
+       *
+       * NOW we update the global/current wallet.
+       * This causes Dashboard → WalletGraph to
+       * display this exact wallet.
+       */
+      onWalletAddressChange(walletData.wallet);
+
+      setInputAddress(walletData.wallet);
       setAnalyzedAddress(walletData.wallet);
       setNetwork(walletData.network);
       setTransactionCount(walletData.count);
-      setTransactions(walletData.transactions || []);
-
-      setAnalyzedAddress(data.wallet);
-      setNetwork(data.network);
-      setTransactionCount(data.count);
-      setTransactions(data.transactions || []);
+      setTransactions(
+        walletData.transactions || []
+      );
     } catch (err) {
       console.error(
         "Wallet analysis error:",
@@ -169,17 +192,25 @@ export default function PlaceholderPage({
     }
   }
 
+  /*
+   * Selecting another wallet from the graph should
+   * also make that wallet the current investigated wallet.
+   */
   function handleWalletSelect(wallet: any) {
-    if (!wallet) return;
+    if (!wallet?.address) return;
 
-    if (wallet.address) {
-      onWalletAddressChange(wallet.address);
-    }
+    const address = wallet.address;
+
+    setInputAddress(address);
+    setAnalyzedAddress(address);
+    onWalletAddressChange(address);
   }
 
   if (isTracer) {
     return (
       <div className="page-pad">
+
+        {/* PAGE HEADER */}
         <div className="page-heading">
           <div>
             <span className="eyebrow">
@@ -195,6 +226,7 @@ export default function PlaceholderPage({
           </div>
         </div>
 
+        {/* WALLET SEARCH / ANALYSIS */}
         <section
           className="panel"
           style={{ marginBottom: "18px" }}
@@ -231,11 +263,12 @@ export default function PlaceholderPage({
               <Search size={17} />
 
               <input
-                value={walletAddress}
+                value={inputAddress}
                 onChange={(e) => {
-                  onWalletAddressChange(
+                  setInputAddress(
                     e.target.value
                   );
+
                   setError("");
                 }}
                 onKeyDown={(e) => {
@@ -271,6 +304,7 @@ export default function PlaceholderPage({
             </button>
           </div>
 
+          {/* ERROR */}
           {error && (
             <div
               style={{
@@ -294,6 +328,7 @@ export default function PlaceholderPage({
             </div>
           )}
 
+          {/* CURRENT ANALYZED WALLET */}
           {analyzedAddress &&
             !error && (
               <div
@@ -318,6 +353,7 @@ export default function PlaceholderPage({
             )}
         </section>
 
+        {/* ANALYSIS METRICS */}
         {analyzedAddress &&
           !loading &&
           !error && (
@@ -402,6 +438,7 @@ export default function PlaceholderPage({
             </div>
           )}
 
+        {/* WALLET GRAPH */}
         {analyzedAddress &&
           !loading &&
           !error && (
@@ -452,6 +489,7 @@ export default function PlaceholderPage({
             </section>
           )}
 
+        {/* TRANSACTION LIST */}
         {analyzedAddress &&
           !loading &&
           !error && (
