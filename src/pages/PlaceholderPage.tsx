@@ -37,7 +37,7 @@ function formatAddress(address: string) {
 /*
  * Backend URL
  */
-const API_BASE_URL = "http://localhost:5001";
+const API_BASE_URL = "https://chanakya-crypto.onrender.com";
 
 function formatValue(tx: Transaction) {
   if (tx.value === null || tx.value === undefined) {
