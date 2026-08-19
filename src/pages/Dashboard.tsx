@@ -200,10 +200,10 @@ useEffect(() => {
   // ==========================================
 
   const riskScore =
-    riskData?.riskScore ?? 0;
+    riskData?.score ?? 0;
 
   const riskLevel =
-    riskData?.riskLevel ??
+    riskData?.level ??
     "UNKNOWN";
 
   const riskFactors =
