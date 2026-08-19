@@ -1,6 +1,6 @@
 import data from "../data/mockData.json";
 
-const BACKEND_URL = "http://localhost:5001";
+const BACKEND_URL = "https://chanakya-crypto.onrender.com";
 
 const cleanAddress = (walletAddress: string) => {
   return walletAddress?.trim();
@@ -90,6 +90,7 @@ getWalletRisk: async (walletAddress: string) => {
 
   return response.json();
 },
+
 };
 
 export type Wallet = (typeof data.wallets)[number];
