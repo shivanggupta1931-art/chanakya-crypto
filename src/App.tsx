@@ -61,7 +61,7 @@ export default function App() {
           />
         ) : page === "Report Studio" ? (
           <ReportStudio
-            walletAddress={currentWalletAddress}
+            
           />
         ) : (
           <PlaceholderPage
