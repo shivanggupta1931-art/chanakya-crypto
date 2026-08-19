@@ -85,6 +85,7 @@ useEffect(() => {
         api.getWalletSanctions(address),
         api.getWalletRisk(address),
       ]);
+      console.log("RISK DATA FROM PRODUCTION:", risk);
 
       if (cancelled) return;
 
