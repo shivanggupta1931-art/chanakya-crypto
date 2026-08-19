@@ -4,6 +4,7 @@ import TopBar from "./components/layout/TopBar";
 import Dashboard from "./pages/Dashboard";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import CaseVaultPage from "./pages/CaseVaultPage";
+import ScamMixerIntelPage from "./pages/ScamMixerIntelPage";
 import ReportStudio from "./components/reports/ReportStudio";
 
 type Theme = "light" | "dark" | "amoled";
@@ -45,6 +46,11 @@ export default function App() {
           />
         ) : page === "Case / FIR Vault" ? (
           <CaseVaultPage
+            setPage={setPage}
+            onWalletAddressChange={setCurrentWalletAddress}
+          />
+        ) : page === "Scam & Mixer Intel" ? (
+          <ScamMixerIntelPage
             setPage={setPage}
             onWalletAddressChange={setCurrentWalletAddress}
           />
