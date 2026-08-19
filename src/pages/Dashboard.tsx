@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   IndianRupee,
   WalletCards,
@@ -17,7 +17,6 @@ import { api, type Wallet } from "../lib/api";
 
 function formatAddress(address: string) {
   if (!address) return "";
-
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
@@ -30,39 +29,267 @@ export default function Dashboard({
 }) {
   const caseData = api.getCase("CC-2026-0417")!;
 
-  const [wallet, setWallet] = useState<Wallet | null>(null);
-  const [explain, setExplain] = useState(false);
+  const [wallet, setWallet] =
+    useState<Wallet | null>(null);
+
+  const [explain, setExplain] =
+    useState(false);
+
+  const [transactionData, setTransactionData] =
+    useState<any>(null);
+
+  const [sanctionsData, setSanctionsData] =
+    useState<any>(null);
+
+  const [riskData, setRiskData] =
+    useState<any>(null);
+
+  const [loadingIntel, setLoadingIntel] =
+    useState(false);
+
+  const [intelError, setIntelError] =
+    useState("");
 
   const alerts = api.getAlerts();
 
-  const summary = useMemo(
-    () =>
-      `Funds originating from the primary suspect account were transferred to Mule Account 01 within 17 minutes. The funds subsequently interacted with a flagged obfuscation service before reaching additional accounts and an identified exchange. Total traced: ₹48.2 lakh. High-risk accounts: 4.`,
-    []
-  );
+  // ==========================================
+  // LOAD REAL WALLET INTELLIGENCE
+  // ==========================================
+
+useEffect(() => {
+  const address = walletAddress?.trim();
+
+  // No valid wallet selected
+  if (!address || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
+    setTransactionData(null);
+    setSanctionsData(null);
+    setRiskData(null);
+    setIntelError("");
+    setLoadingIntel(false);
+    return;
+  }
+
+  let cancelled = false;
+
+  async function loadWalletIntelligence() {
+    try {
+      setLoadingIntel(true);
+      setIntelError("");
+
+      const [
+        transactions,
+        sanctions,
+        risk,
+      ] = await Promise.all([
+        api.getRealWalletGraph(address),
+        api.getWalletSanctions(address),
+        api.getWalletRisk(address),
+      ]);
+
+      if (cancelled) return;
+
+      setTransactionData(transactions);
+      setSanctionsData(sanctions);
+      setRiskData(risk);
+
+    } catch (error) {
+      console.error(
+        "Wallet intelligence error:",
+        error
+      );
+
+      if (!cancelled) {
+        setIntelError(
+          "Unable to load live wallet intelligence."
+        );
+
+        setTransactionData(null);
+        setSanctionsData(null);
+        setRiskData(null);
+      }
+
+    } finally {
+      if (!cancelled) {
+        setLoadingIntel(false);
+      }
+    }
+  }
+
+  loadWalletIntelligence();
+
+  return () => {
+    cancelled = true;
+  };
+}, [walletAddress]);
+  // ==========================================
+  // REAL TRANSACTION DATA
+  // ==========================================
+
+  const transactions =
+    transactionData?.transactions || [];
+
+  const transactionCount =
+    transactionData?.count ??
+    transactions.length ??
+    0;
+
+  // ==========================================
+  // UNIQUE COUNTERPARTIES
+  // ==========================================
+
+  const linkedAccounts = useMemo(() => {
+    const addresses = new Set<string>();
+
+    transactions.forEach((tx: any) => {
+      if (
+        tx.from &&
+        tx.from.toLowerCase() !==
+          walletAddress.toLowerCase()
+      ) {
+        addresses.add(
+          tx.from.toLowerCase()
+        );
+      }
+
+      if (
+        tx.to &&
+        tx.to.toLowerCase() !==
+          walletAddress.toLowerCase()
+      ) {
+        addresses.add(
+          tx.to.toLowerCase()
+        );
+      }
+    });
+
+    return addresses.size;
+  }, [
+    transactions,
+    walletAddress,
+  ]);
+
+  // ==========================================
+  // ETH TRANSFER TOTAL
+  // ==========================================
+
+  const totalEth = useMemo(() => {
+    return transactions.reduce(
+      (total: number, tx: any) => {
+        if (
+          tx.asset === "ETH" &&
+          typeof tx.value === "number"
+        ) {
+          return total + tx.value;
+        }
+
+        return total;
+      },
+      0
+    );
+  }, [transactions]);
+
+  // ==========================================
+  // SCORECHAIN SANCTIONS
+  // ==========================================
+
+  const sanctioned =
+    sanctionsData?.sanctioned === true;
+
+  // ==========================================
+  // REAL CHANAKYA RISK ENGINE RESULT
+  // ==========================================
+
+  const riskScore =
+    riskData?.riskScore ?? 0;
+
+  const riskLevel =
+    riskData?.riskLevel ??
+    "UNKNOWN";
+
+  const riskFactors =
+    riskData?.riskFactors || [];
+
+  // ==========================================
+  // INVESTIGATION SUMMARY
+  // ==========================================
+
+  const summary = useMemo(() => {
+    if (!walletAddress) {
+      return "Analyze a wallet to generate a live investigation summary.";
+    }
+
+    if (loadingIntel) {
+      return "Loading live blockchain, sanctions and risk intelligence...";
+    }
+
+    return `Wallet ${formatAddress(
+      walletAddress
+    )} has ${transactionCount} recorded transfers and ${linkedAccounts} unique counterparties. Approximately ${totalEth.toFixed(
+      4
+    )} ETH of native Ethereum transfers were identified in the returned dataset. Scorechain sanctions screening returned ${
+      sanctioned
+        ? "a sanctions match"
+        : "no sanctions match"
+    }. Chanakya's risk engine classified this wallet as ${riskLevel.toLowerCase()} risk with a score of ${riskScore}/100.`;
+  }, [
+    walletAddress,
+    loadingIntel,
+    transactionCount,
+    linkedAccounts,
+    totalEth,
+    sanctioned,
+    riskLevel,
+    riskScore,
+  ]);
+
+  // ==========================================
+  // UI
+  // ==========================================
 
   return (
     <div className="page-pad">
 
-      {/* LIVE FEED */}
+      {/* ======================================
+          LIVE INTELLIGENCE FEED
+      ====================================== */}
+
       <div className="live-ticker">
         <span className="live-dot" />
+
         LIVE INTELLIGENCE FEED
+
         <b>•</b>
-        High-value transfer detected
-        <span>₹11.8L</span>
+
+        Blockchain data
+
+        <span>
+          {loadingIntel
+            ? "ANALYZING"
+            : "CONNECTED"}
+        </span>
+
         <b>•</b>
-        Obfuscation interaction detected
-        <span>10:48</span>
-        <b>•</b>
-        Exchange off-ramp identified
+
+        Scorechain sanctions screening
+
+        <span>
+          {loadingIntel
+            ? "..."
+            : sanctioned
+            ? "MATCH"
+            : "CLEAR"}
+        </span>
       </div>
 
-      {/* PAGE HEADER */}
+      {/* ======================================
+          PAGE HEADER
+      ====================================== */}
+
       <div className="page-heading">
         <div>
           <span className="eyebrow">
-            ACTIVE INVESTIGATION · {caseData.id}
+            ACTIVE INVESTIGATION ·{" "}
+            {caseData.id}
           </span>
 
           <h1>{caseData.title}</h1>
@@ -72,7 +299,6 @@ export default function Dashboard({
             {caseData.investigator}
           </p>
 
-          {/* CURRENTLY TRACED WALLET */}
           {walletAddress && (
             <div
               style={{
@@ -82,9 +308,27 @@ export default function Dashboard({
               }}
             >
               CURRENT WALLET ·{" "}
-              <strong style={{ color: "var(--text)" }}>
-                {formatAddress(walletAddress)}
+              <strong
+                style={{
+                  color: "var(--text)",
+                }}
+              >
+                {formatAddress(
+                  walletAddress
+                )}
               </strong>
+            </div>
+          )}
+
+          {intelError && (
+            <div
+              style={{
+                marginTop: "8px",
+                color: "#ef4444",
+                fontSize: "12px",
+              }}
+            >
+              {intelError}
             </div>
           )}
         </div>
@@ -97,7 +341,9 @@ export default function Dashboard({
 
           <button
             className="primary-btn"
-            onClick={() => setPage("Report Studio")}
+            onClick={() =>
+              setPage("Report Studio")
+            }
           >
             <Download size={16} />
             Evidence Dossier
@@ -105,45 +351,88 @@ export default function Dashboard({
         </div>
       </div>
 
-      {/* METRICS */}
+      {/* ======================================
+          REAL METRICS
+      ====================================== */}
+
       <div className="metric-grid">
+
         <MetricCard
-          label="Funds Traced"
-          value="₹48.2L"
-          meta="+18.4% since first trace"
-          icon={<IndianRupee size={19} />}
+          label="ETH Traced"
+          value={
+            loadingIntel
+              ? "..."
+              : `${totalEth.toFixed(4)} ETH`
+          }
+          meta="Native ETH transfers"
+          icon={
+            <IndianRupee size={19} />
+          }
           tone="blue"
         />
 
         <MetricCard
           label="Linked Accounts"
-          value="17"
-          meta="4 high-risk accounts"
-          icon={<WalletCards size={19} />}
+          value={
+            loadingIntel
+              ? "..."
+              : String(linkedAccounts)
+          }
+          meta="Unique counterparties"
+          icon={
+            <WalletCards size={19} />
+          }
           tone="amber"
         />
 
         <MetricCard
           label="Risk Score"
-          value="91/100"
-          meta="Critical investigation"
-          icon={<TriangleAlert size={19} />}
+          value={
+            loadingIntel
+              ? "..."
+              : `${riskScore}/100`
+          }
+          meta={
+            loadingIntel
+              ? "Analyzing..."
+              : `${riskLevel} · Chanakya Risk Engine`
+          }
+          icon={
+            <TriangleAlert size={19} />
+          }
           tone="red"
         />
 
         <MetricCard
           label="Transactions"
-          value="42"
-          meta="7 require review"
-          icon={<Activity size={19} />}
+          value={
+            loadingIntel
+              ? "..."
+              : String(transactionCount)
+          }
+          meta={
+            sanctioned
+              ? "Scorechain sanctions match"
+              : "Scorechain: no sanctions match"
+          }
+          icon={
+            <Activity size={19} />
+          }
           tone="green"
         />
+
       </div>
 
-      {/* MAIN WORKSPACE */}
+      {/* ======================================
+          MAIN WORKSPACE
+      ====================================== */}
+
       <div className="workspace-grid">
 
-        {/* WALLET GRAPH */}
+        {/* ====================================
+            GRAPH
+        ==================================== */}
+
         <section className="panel graph-panel">
 
           <div className="panel-header">
@@ -165,21 +454,31 @@ export default function Dashboard({
                     color: "var(--muted)",
                   }}
                 >
-                  Tracing {formatAddress(walletAddress)}
+                  Tracing{" "}
+                  {formatAddress(
+                    walletAddress
+                  )}
                 </span>
               )}
             </div>
 
             <div className="graph-controls">
-              <button>1 Hop</button>
+              <button>
+                1 Hop
+              </button>
+
               <button className="selected">
                 3 Hops
               </button>
-              <button>5 Hops</button>
+
+              <button>
+                5 Hops
+              </button>
             </div>
           </div>
 
           <div className="legend">
+
             <span>
               <i className="blue-dot" />
               Starting suspect
@@ -199,14 +498,19 @@ export default function Dashboard({
               <i className="green-dot" />
               Exchange / off-ramp
             </span>
+
           </div>
 
           <div className="graph-wrap">
 
             {walletAddress ? (
               <WalletGraph
-                walletAddress={walletAddress}
-                onWalletSelect={setWallet}
+                walletAddress={
+                  walletAddress
+                }
+                onWalletSelect={
+                  setWallet
+                }
               />
             ) : (
               <div
@@ -239,14 +543,22 @@ export default function Dashboard({
                     fontSize: "12px",
                   }}
                 >
-                  Analyze a wallet in Wallet Tracer
-                  to display its money-flow graph here.
+                  Analyze a wallet in
+                  Wallet Tracer to
+                  display its money-flow
+                  graph here.
                 </p>
 
                 <button
                   className="primary-btn"
-                  style={{ marginTop: "8px" }}
-                  onClick={() => setPage("Wallet Tracer")}
+                  style={{
+                    marginTop: "8px",
+                  }}
+                  onClick={() =>
+                    setPage(
+                      "Wallet Tracer"
+                    )
+                  }
                 >
                   Open Wallet Tracer
                 </button>
@@ -254,15 +566,23 @@ export default function Dashboard({
             )}
 
           </div>
+
         </section>
 
-        {/* RIGHT INTELLIGENCE COLUMN */}
+        {/* ====================================
+            RIGHT INTELLIGENCE COLUMN
+        ==================================== */}
+
         <aside className="intel-column">
 
-          {/* ALERTS */}
+          {/* ==================================
+              ALERTS
+          ================================== */}
+
           <section className="panel alert-panel">
 
             <div className="panel-header">
+
               <div>
                 <span className="eyebrow">
                   PRIORITY SIGNALS
@@ -276,6 +596,7 @@ export default function Dashboard({
               <span className="count-pill">
                 {alerts.length}
               </span>
+
             </div>
 
             {alerts.map((alert) => (
@@ -290,20 +611,29 @@ export default function Dashboard({
                 </div>
 
                 <div className="alert-copy">
-                  <strong>{alert.title}</strong>
+
+                  <strong>
+                    {alert.title}
+                  </strong>
 
                   <span>
                     {new Date(
                       alert.timestamp
-                    ).toLocaleString("en-IN")}
+                    ).toLocaleString(
+                      "en-IN"
+                    )}
                   </span>
+
                 </div>
               </div>
             ))}
 
           </section>
 
-          {/* EXPLAIN FLOW */}
+          {/* ==================================
+              EXPLAIN FLOW
+          ================================== */}
+
           <section className="panel explain-panel">
 
             <div className="ai-icon">
@@ -323,13 +653,15 @@ export default function Dashboard({
             <p>
               {explain
                 ? summary
-                : "Convert the visible transaction path into a plain-English investigation summary for rapid review."}
+                : "Convert the live transaction path, sanctions result and risk factors into a plain-English investigation summary."}
             </p>
 
             <button
               className="primary-btn full"
               onClick={() =>
-                setExplain((v) => !v)
+                setExplain(
+                  (value) => !value
+                )
               }
             >
               {explain
@@ -339,10 +671,192 @@ export default function Dashboard({
 
           </section>
 
-          {/* QUICK LOOKUP */}
+          {/* ==================================
+              CHANAKYA RISK FACTORS
+          ================================== */}
+
+          <section className="panel">
+
+            <div className="panel-header">
+
+              <div>
+                <span className="eyebrow">
+                  CHANAKYA ANALYSIS
+                </span>
+
+                <h2>
+                  Risk Factors
+                </h2>
+              </div>
+
+              <span className="count-pill">
+                {riskFactors.length}
+              </span>
+
+            </div>
+
+            {loadingIntel ? (
+              <div
+                style={{
+                  padding: "14px",
+                  color: "var(--muted)",
+                  fontSize: "12px",
+                }}
+              >
+                Analyzing wallet...
+              </div>
+            ) : riskFactors.length === 0 ? (
+              <div
+                style={{
+                  padding: "14px",
+                  color: "var(--muted)",
+                  fontSize: "12px",
+                }}
+              >
+                No significant risk
+                factors detected.
+              </div>
+            ) : (
+              riskFactors
+                .slice(0, 4)
+                .map(
+                  (
+                    factor: any,
+                    index: number
+                  ) => (
+                    <div
+                      key={`${factor.factor}-${index}`}
+                      style={{
+                        padding:
+                          "10px 0",
+                        borderBottom:
+                          "1px solid var(--border)",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent:
+                            "space-between",
+                          gap: "10px",
+                        }}
+                      >
+                        <strong
+                          style={{
+                            fontSize:
+                              "12px",
+                          }}
+                        >
+                          {factor.factor}
+                        </strong>
+
+                        <b
+                          style={{
+                            fontSize:
+                              "12px",
+                            color:
+                              "#ef4444",
+                          }}
+                        >
+                          +{factor.points}
+                        </b>
+                      </div>
+
+                      {factor.description && (
+                        <span
+                          style={{
+                            display:
+                              "block",
+                            marginTop:
+                              "4px",
+                            fontSize:
+                              "10px",
+                            color:
+                              "var(--muted)",
+                          }}
+                        >
+                          {
+                            factor.description
+                          }
+                        </span>
+                      )}
+                    </div>
+                  )
+                )
+            )}
+
+          </section>
+
+          {/* ==================================
+              SCORECHAIN
+          ================================== */}
+
+          <section className="panel">
+
+            <div className="panel-header">
+
+              <div>
+                <span className="eyebrow">
+                  SCORECHAIN
+                </span>
+
+                <h2>
+                  Sanctions Screening
+                </h2>
+              </div>
+
+            </div>
+
+            <div
+              style={{
+                padding: "14px",
+                borderRadius: "10px",
+                background:
+                  sanctioned
+                    ? "rgba(239,68,68,.10)"
+                    : "rgba(34,197,94,.10)",
+                border:
+                  `1px solid ${
+                    sanctioned
+                      ? "rgba(239,68,68,.25)"
+                      : "rgba(34,197,94,.25)"
+                  }`,
+              }}
+            >
+
+              <strong>
+
+                {loadingIntel
+                  ? "SCREENING..."
+                  : sanctioned
+                  ? "⚠ SANCTIONS MATCH"
+                  : "✓ NO SANCTIONS MATCH"}
+
+              </strong>
+
+              <div
+                style={{
+                  marginTop: "5px",
+                  fontSize: "11px",
+                  color: "var(--muted)",
+                }}
+              >
+                Real Scorechain
+                sanctions screening
+              </div>
+
+            </div>
+
+          </section>
+
+          {/* ==================================
+              QUICK WALLET LOOKUP
+          ================================== */}
+
           <section className="panel search-panel">
 
             <div className="panel-header">
+
               <div>
                 <span className="eyebrow">
                   QUICK LOOKUP
@@ -352,17 +866,21 @@ export default function Dashboard({
                   Wallet Search
                 </h2>
               </div>
+
             </div>
 
             <div className="search-input">
+
               <Search size={16} />
 
               <input
                 placeholder="0x... / label / entity"
               />
+
             </div>
 
             <div className="mini-results">
+
               {api
                 .getWallets()
                 .slice(0, 4)
@@ -373,15 +891,19 @@ export default function Dashboard({
                       setWallet(w)
                     }
                   >
+
                     <span
                       className="node-dot"
                       style={{
                         background:
-                          w.type === "MIXER"
+                          w.type ===
+                          "MIXER"
                             ? "#ef4444"
-                            : w.type === "MULE"
+                            : w.type ===
+                              "MULE"
                             ? "#f59e0b"
-                            : w.type === "EXCHANGE"
+                            : w.type ===
+                              "EXCHANGE"
                             ? "#22c55e"
                             : "#3b82f6",
                       }}
@@ -394,19 +916,23 @@ export default function Dashboard({
                     <b>
                       {w.riskScore}
                     </b>
+
                   </button>
                 ))}
+
             </div>
 
           </section>
 
         </aside>
+
       </div>
 
-      {/* WALLET DETAILS DRAWER */}
       <WalletDrawer
         wallet={wallet}
-        onClose={() => setWallet(null)}
+        onClose={() =>
+          setWallet(null)
+        }
       />
 
     </div>
