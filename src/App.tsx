@@ -55,7 +55,7 @@ export default function App() {
             onWalletAddressChange={setCurrentWalletAddress}
           />
         ) : page === "Report Studio" ? (
-          <ReportStudio />
+          <ReportStudio walletAddress={currentWalletAddress} />
         ) : (
           <PlaceholderPage
             title={page}
